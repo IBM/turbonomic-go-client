@@ -1,21 +1,20 @@
 # Turbonomic-Go-Client
 
-This simple GoLang Library allows users to access Turbonomic's API. It currently supports authentication using
-a username and password.
+Use this simple GoLang Library to access the Turbonomic API. It currently supports authentication by using a username and password.
 
 ## Requirements
 
-- [Go](https://golang.org/doc/install) >= 1.22.2
+- [Go](https://golang.org/doc/install) >= 1.23.7
 
-## Authenticating
+## Authenticating to the Turbonomic API
 
-The library creates a client object by passing in the _ClientParameters_ struct with the following parameters:
+This library creates a client object by passing in a `ClientParameters` struct with the following parameters:
 
 - Hostname
 - Username
 - Password
 
-You then create a new client as seen below:
+Create a client with these parameters, similar to the following example:
 
 ```
 newClientOpts := ClientParameters{
@@ -30,9 +29,9 @@ if err != nil {
 }
 ```
 
-This client can then be used to call other methods to interact with the Turbonomic API.
+You can then use this client to call other methods to interact with the Turbonomic API.
 
-Note: If you have a server with a self signed certificate, you can also skip ssl validation by passing in the _Skipverify_ parameter:
+If your server has a self-signed certificate, you can skip SSL validation by also passing in the `Skipverify` parameter in the `ClientParameters` struct:
 
 ```
 newClientOpts := ClientParameters{
@@ -43,9 +42,9 @@ newClientOpts := ClientParameters{
     }
 ```
 
-## Searching for a Entity by Name
+## Searching for an entity by name
 
-To search for an entity by name you use need to pass a _SearchRequest_ struct to the _SearchEntityByName_ method:
+To search for an entity by name, pass a `SearchRequest` struct to the `SearchEntityByName` method:
 
 ```
     searchReq := SearchRequest{
@@ -58,9 +57,9 @@ To search for an entity by name you use need to pass a _SearchRequest_ struct to
     entityName, err := c.SearchEntityByName(searchReq)
 ```
 
-## Retrieving an Entity By UUID
+## Retrieving an entity by UUID
 
-To retrieve entity data based on UUID, you pass a _EntityRequest_ struct to the _GetEntity_ method:
+To retrieve entity data based on its UUID, pass a `EntityRequest` struct to the `GetEntity` method:
 
 ```
     entityReq := EntityRequest{Uuid: "123456789"}
@@ -68,9 +67,9 @@ To retrieve entity data based on UUID, you pass a _EntityRequest_ struct to the 
     entityName, err := c.GetEntity(entityReq)
 ```
 
-## Retrieve Actions based on request parameters and Entity UUID
+## Retrieving actions based on request parameters and entity UUID
 
-To retrieve action data, you pass a _ActionsRequest_ struct to the _GetActions_ method:
+To retrieve action data, pass an `ActionsRequest` struct to the `GetActions` method:
 
 ```
     actionReq := ActionsRequest{
