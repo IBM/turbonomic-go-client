@@ -16,7 +16,10 @@
 package turboclient
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -28,16 +31,25 @@ type AuthRequest struct {
 	hostname   string
 	username   string
 	password   string
+	oAuthCreds OAuthCreds
 	httpClient *http.Client
+}
+
+type oAuthResp struct {
+	AccessToken string `json:"access_token"`
+	Scope       string `json:"scope"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int    `json:"expires_in"`
 }
 
 // Creates authorized Turbonomic API Client
 func clientAuth(authreq *AuthRequest) (*Client, error) {
 	var client Client
+	urlPath, payload, err := setAuthParams(*authreq)
 
-	urlPath := "https://" + authreq.hostname + authreq.basePath + "/login"
-	payload := strings.NewReader("username=" + authreq.username + "&password=" + authreq.password)
-
+	if err != nil {
+		return nil, err
+	}
 	req, err := http.NewRequest("POST", urlPath, payload)
 
 	if err != nil {
@@ -45,6 +57,11 @@ func clientAuth(authreq *AuthRequest) (*Client, error) {
 	}
 
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	if (authreq.oAuthCreds.ClientId != "") && (authreq.oAuthCreds.ClientSecret != "") {
+		auth := authreq.oAuthCreds.ClientId + ":" + authreq.oAuthCreds.ClientSecret
+		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
+	}
 
 	resp, err := authreq.httpClient.Do(req)
 	if err != nil {
@@ -59,8 +76,42 @@ func clientAuth(authreq *AuthRequest) (*Client, error) {
 	}
 	slog.Debug("Successfully logged into Turbonomic")
 
+	body, err := io.ReadAll(resp.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var result oAuthResp
+	if err := json.Unmarshal(body, &result); err != nil {
+		slog.Error("Can not unmarshal oAuth JSON Response")
+		return nil, err
+	}
+
 	client.BaseURL = "https://" + authreq.hostname + authreq.basePath
 	client.HTTPClient = authreq.httpClient
+	client.Headers = make(map[string]string)
+	if result.AccessToken != "" {
+		client.Headers["Authorization"] = "Bearer " + result.AccessToken
+	}
 
 	return &client, nil
+}
+
+func setAuthParams(authreq AuthRequest) (urlPath string, payload *strings.Reader, err error) {
+	if (authreq.username) != "" && (authreq.password != "") {
+		urlPath = "https://" + authreq.hostname + authreq.basePath + "/login"
+		payload = strings.NewReader("username=" + authreq.username + "&password=" + authreq.password)
+	} else if (authreq.oAuthCreds.Role.String() != "") &&
+		(authreq.oAuthCreds.ClientId != "") &&
+		(authreq.oAuthCreds.ClientSecret != "") {
+
+		urlPath = "https://" + authreq.hostname + "/oauth2/token"
+		payload = strings.NewReader("grant_type=" + "client_credentials" +
+			"&scope=role:" + authreq.oAuthCreds.Role.String())
+	} else {
+		return "", nil, errors.New("please provide valid credentials; username/password or oauth2")
+	}
+	return urlPath, payload, nil
+
 }

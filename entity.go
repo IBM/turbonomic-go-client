@@ -83,7 +83,9 @@ func (c *Client) GetEntity(reqOpts EntityRequest) (*EntityResults, error) {
 	slog.Debug(string(restResp))
 
 	var entityResults EntityResults
-	json.Unmarshal(restResp, &entityResults)
+	if err := json.Unmarshal(restResp, &entityResults); err != nil {
+		return nil, err
+	}
 
 	return &entityResults, err
 }

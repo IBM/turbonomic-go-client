@@ -7,7 +7,9 @@ Use this simple GoLang Library to access the Turbonomic API. It currently suppor
 - [Go](https://golang.org/doc/install) >= 1.23.7
 
 ## Authenticating to the Turbonomic API
+You can authenticate to the Turbonomic API by using either a username and password or oAuth 2.0.
 
+### Authenticating with a username and password
 This library creates a client object by passing in a `ClientParameters` struct with the following parameters:
 
 - Hostname
@@ -31,6 +33,38 @@ if err != nil {
 
 You can then use this client to call other methods to interact with the Turbonomic API.
 
+### Authenticating with oAuth 2.0
+
+In order to authenticate to Turbonomic's API using oAuth 2,0, you first need to create an oAuth client.  Follow [Creating and authenticating an OAuth 2.0 client](https://www.ibm.com/docs/en/tarm/8.15.0?topic=cookbook-authenticating-oauth-20-clients-api#cookbook_administration_oauth_authentication__title__4)
+to create the client.  The output from this will be the following parameters:
+- clientId
+- clientSecret
+- role
+
+Once you have the prerequisite parameters, you will want to create a `OAuthCreds` struct similar to the following example:
+
+```
+oauthCreds := OAuthCreds{
+    ClientId:     clientId,
+    ClientSecret: clientSecret,
+    Role:         role,
+}
+```
+
+**Note:** Valid roles are ADMINISTRATOR, SITE_ADMIN, AUTOMATOR, DEPLOYER, ADVISOR, OBSERVER, OPERATIONAL_OBSERVER, SHARED_ADVISOR, SHARED_OBSERVER, REPORT_EDITOR.
+
+You then pass the `OAuthCreds` struct with the Hostname of your Turbonomic instance to a `ClientParameters` struct to create a Turbonomic client:
+
+```
+	newClientOpts := ClientParameters{Hostname: TurboHost, OAuthCreds: oauthCreds}
+    if err != nil {
+        panic(err)
+    }
+```
+
+You can then use this client to call other methods to interact with the Turbonomic API.
+
+### Using a self-signed certificate
 If your server has a self-signed certificate, you can skip SSL validation by also passing in the `Skipverify` parameter in the `ClientParameters` struct:
 
 ```

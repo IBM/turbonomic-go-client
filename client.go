@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -37,13 +38,29 @@ type ClientParameters struct {
 	Hostname   string
 	Username   string
 	Password   string
+	OAuthCreds OAuthCreds
 	Skipverify bool
+}
+type OAuthCreds struct {
+	ClientId     string
+	ClientSecret string
+	Role         TurboRoles
+}
+
+type T8cClient interface {
+	GetActionsByUUID(actionReq ActionsRequest) (ActionResults, error)
+	GetEntity(reqOpts EntityRequest) (*EntityResults, error)
+	SearchEntities(searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error)
+	SearchEntityByName(searchReq SearchRequest) (SearchResults, error)
+	getFilterType(entityType string) (string, error)
+	request(reqOpt RequestOptions) ([]byte, error)
 }
 
 // Turbonomic Client
 type Client struct {
 	BaseURL    string
 	HTTPClient *http.Client
+	Headers    map[string]string
 }
 
 type CommonReqParams struct {
@@ -57,12 +74,66 @@ type RequestOptions struct {
 	Path            string
 	ReqDTO          *bytes.Buffer
 	CommonReqParams CommonReqParams
-	// QueryParameters  map[string]string
-	// Headers          map[string]string
+}
+
+type TurboRoles int
+
+const (
+	ADMINISTRATOR TurboRoles = iota + 1
+	SITE_ADMIN
+	AUTOMATOR
+	DEPLOYER
+	ADVISOR
+	OBSERVER
+	OPERATIONAL_OBSERVER
+	SHARED_ADVISOR
+	SHARED_OBSERVER
+	REPORT_EDITOR
+)
+
+func (t TurboRoles) String() string {
+	return [...]string{"UNSET",
+		"ADMINISTRATOR",
+		"SITE_ADMIN",
+		"AUTOMATOR",
+		"DEPLOYER",
+		"ADVISOR",
+		"OBSERVER",
+		"OPERATIONAL_OBSERVER",
+		"SHARED_ADVISOR",
+		"SHARED_OBSERVER",
+		"REPORT_EDITOR"}[t]
+}
+
+func GetRolefromString(role string) TurboRoles {
+	switch strings.ToUpper(role) {
+	case "ADMINISTRATOR":
+		return ADMINISTRATOR
+	case "SITE_ADMIN":
+		return SITE_ADMIN
+	case "AUTOMATOR":
+		return AUTOMATOR
+	case "DEPLOYER":
+		return DEPLOYER
+	case "ADVISOR":
+		return ADVISOR
+	case "OBSERVER":
+		return OBSERVER
+	case "OPERATIONAL_OBSERVER":
+		return OPERATIONAL_OBSERVER
+	case "SHARED_ADVISOR":
+		return SHARED_ADVISOR
+	case "SHARED_OBSERVER":
+		return SHARED_OBSERVER
+	case "REPORT_EDITOR":
+		return REPORT_EDITOR
+	default:
+		panic("unrecognized Turbonomic role")
+	}
 }
 
 // Creates a new instance of the Turbonomic Client
-func NewClient(clientParams *ClientParameters) (*Client, error) {
+func NewClient(clientParams *ClientParameters) (T8cClient, error) {
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	if clientParams.Skipverify {
 		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: clientParams.Skipverify}
@@ -77,10 +148,11 @@ func NewClient(clientParams *ClientParameters) (*Client, error) {
 	jar, _ := cookiejar.New(nil)
 
 	client := &AuthRequest{
-		basePath: basepath,
-		hostname: clientParams.Hostname,
-		username: clientParams.Username,
-		password: clientParams.Password,
+		basePath:   basepath,
+		hostname:   clientParams.Hostname,
+		username:   clientParams.Username,
+		password:   clientParams.Password,
+		oAuthCreds: clientParams.OAuthCreds,
 		httpClient: &http.Client{
 			Jar:       jar,
 			Timeout:   time.Minute,
@@ -123,6 +195,10 @@ func (c *Client) request(reqOpt RequestOptions) ([]byte, error) {
 	}
 
 	restReq.Header.Add("Content-Type", "application/json")
+
+	for k, v := range c.Headers {
+		restReq.Header.Set(k, v)
+	}
 
 	for k, v := range reqOpt.CommonReqParams.Headers {
 		restReq.Header.Set(k, v)

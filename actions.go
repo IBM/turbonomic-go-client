@@ -49,7 +49,7 @@ type ActionResults []struct {
 	ActionState    string    `json:"actionState"`
 	ActionMode     string    `json:"actionMode"`
 	Details        string    `json:"details"`
-	Importance     int       `json:"importance"`
+	Importance     float32   `json:"importance"`
 	Target         struct {
 		UUID            string `json:"uuid"`
 		DisplayName     string `json:"displayName"`
@@ -122,10 +122,10 @@ type ActionResults []struct {
 		EnableMatch bool   `json:"enableMatch"`
 	} `json:"template"`
 	Risk struct {
-		SubCategory string `json:"subCategory"`
-		Description string `json:"description"`
-		Severity    string `json:"severity"`
-		Importance  int    `json:"importance"`
+		SubCategory string  `json:"subCategory"`
+		Description string  `json:"description"`
+		Severity    string  `json:"severity"`
+		Importance  float32 `json:"importance"`
 	} `json:"risk"`
 	Stats []struct {
 		Name    string `json:"name"`
@@ -259,7 +259,11 @@ func (c *Client) GetActionsByUUID(actionReq ActionsRequest) (ActionResults, erro
 	}
 
 	var actionResults ActionResults
-	json.Unmarshal(restResp, &actionResults)
+	// json.Unmarshal(restResp, &actionResults)
+
+	if err := json.Unmarshal(restResp, &actionResults); err != nil {
+		return nil, err
+	}
 
 	return actionResults, err
 }

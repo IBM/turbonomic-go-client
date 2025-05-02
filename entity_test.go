@@ -13,22 +13,70 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// The EntityTests struct is referenced from testdata.go which needs to be created based on testdata.go.template
+// For Integrations tests, the ActionTests struct is referenced from testdata.go which needs to be created based on testdata.go.template.
+// Integrations tests will only run if the environment variable `INTEGRATION` is set.
+
 package turboclient
 
 import (
+	"crypto/tls"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func convertEntityTest(entity EntityResults) TestEntity {
-	return TestEntity{
-		uuid:        entity.UUID,
-		displayName: entity.DisplayName,
-		className:   entity.ClassName}
+func TestGetEntity(t *testing.T) {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	client := &Client{
+		BaseURL: "/api/v3",
+		HTTPClient: &http.Client{
+			Transport: customTransport,
+		},
+	}
+
+	// Mock response from the Turbonomic API
+	mockResponse, err := os.ReadFile("./testfiles/GetEntity.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Create a test server with the mock response
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "/entities/75941320319680", r.URL.Path)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockResponse))
+	}))
+	defer ts.Close()
+
+	// Set the base URL for the client
+	client.BaseURL = ts.URL
+
+	// Create an EntityRequest with test parameters
+	entityReq := EntityRequest{Uuid: "75941320319680"}
+
+	// Call the GetEntity function
+	entityResults, err := client.GetEntity(entityReq)
+
+	// Assert that the function returned the expected result and no error
+	assert.NoError(t, err)
+	assert.Equal(t, "75941320319680", entityResults.UUID)
+	assert.Equal(t, "test-vm", entityResults.DisplayName)
+	assert.Equal(t, "VirtualMachine", entityResults.ClassName)
 }
 
-func TestTurboEntity(t *testing.T) {
-
+func TestTurboEntityIntegration(t *testing.T) {
+	if os.Getenv("INTEGRATION") == "" {
+		t.Skip("skipping integration tests, to run set environment variable INTEGRATION")
+	}
 	newClientOpts := ClientParameters{Hostname: TurboHost, Username: TurboUser, Password: TurboPass, Skipverify: DoNotVerify}
 
 	c, err := NewClient(&newClientOpts)
@@ -50,5 +98,11 @@ func TestTurboEntity(t *testing.T) {
 		}
 
 	}
+}
 
+func convertEntityTest(entity EntityResults) TestEntity {
+	return TestEntity{
+		uuid:        entity.UUID,
+		displayName: entity.DisplayName,
+		className:   entity.ClassName}
 }

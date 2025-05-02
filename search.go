@@ -190,7 +190,8 @@ func (c *Client) SearchEntityByName(searchReq SearchRequest) (SearchResults, err
 	return c.SearchEntities(searchCriteria, searchReq.CommonReqParams)
 }
 
-func (c *Client) SearchEntities(searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error) {
+func (c *Client) SearchEntities(
+	searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error) {
 
 	dtoBuf := new(bytes.Buffer)
 	json.NewEncoder(dtoBuf).Encode(searchCriteria)
@@ -204,12 +205,15 @@ func (c *Client) SearchEntities(searchCriteria SearchDTO, reqParams CommonReqPar
 	}
 
 	var searchResults SearchResults
-	json.Unmarshal(restResp, &searchResults)
+	if err := json.Unmarshal(restResp, &searchResults); err != nil {
+		return nil, err
+	}
 
 	return searchResults, err
 }
 
-// Helper function to enable the use of entity type as the filter instead of longer parameter names required by Turbonomic's API
+// Helper function to enable the use of entity type as the filter instead of
+// longer parameter names required by Turbonomic's API
 func (c *Client) getFilterType(entityType string) (string, error) {
 	entityMap := map[string]string{
 		"VirtualMachine": "vmsByName",

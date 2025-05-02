@@ -13,15 +13,78 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// The ActionTests struct is referenced from testdata.go which needs to be created based on testdata.go.template
+// For Integrations tests, the ActionTests struct is referenced from testdata.go which needs to be created based on testdata.go.template.
+// Integrations tests will only run if the environment variable `INTEGRATION` is set.
+
 package turboclient
 
 import (
+	"crypto/tls"
+	"io"
+	"log"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
-func TestGetActions(t *testing.T) {
+func TestClient_GetActionsByUUID(t *testing.T) {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
+	client := &Client{
+		BaseURL: "/api/v3",
+		HTTPClient: &http.Client{
+			Transport: customTransport,
+		},
+	}
+
+	// Mock response from the Turbonomic API
+	mockResponse, err := os.ReadFile("./testfiles/GetActionsByUuid.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Create a test server with the mock response
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, "/entities/75941320319680/actions", r.URL.Path)
+		body, _ := io.ReadAll(r.Body)
+		assert.Equal(t, "{\"actionStateList\":[\"READY\"],\"actionTypeList\":[\"RESIZE\"],\"detailLevel\":\"EXECUTION\"}\n", string(body))
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(mockResponse))
+	}))
+	defer ts.Close()
+
+	// Set the base URL for the client
+	client.BaseURL = ts.URL
+
+	// Create an ActionsRequest with test parameters
+	actionReq := ActionsRequest{
+		Uuid:        "75941320319680",
+		ActionState: []string{"READY"},
+		ActionType:  []string{"RESIZE"},
+		DetailLevel: "EXECUTION",
+	}
+
+	// Call the GetActionsByUUID function
+	actionResults, err := client.GetActionsByUUID(actionReq)
+
+	// Assert that the function returned the expected result and no error
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(actionResults))
+	assert.Equal(t, "638911097668880", actionResults[0].UUID)
+	assert.Equal(t, "75941320319680", actionResults[0].Target.UUID)
+}
+
+func TestGetActionsIntegration(t *testing.T) {
+	if os.Getenv("INTEGRATION") == "" {
+		t.Skip("skipping integration tests, to run set environment variable INTEGRATION")
+	}
 	newClientOpts := ClientParameters{Hostname: TurboHost, Username: TurboUser, Password: TurboPass, Skipverify: DoNotVerify}
 	c, err := NewClient(&newClientOpts)
 	if err != nil {
@@ -37,12 +100,11 @@ func TestGetActions(t *testing.T) {
 			t.FailNow()
 		}
 		if len(respAction) != 1 {
-			t.Errorf("received %d entities, wanted %d entites", len(respAction), 1)
+			t.Errorf("received %d actions, wanted %d actions -> %s", len(respAction), 1, tt.displayName)
 			t.FailNow()
 		}
 		if respAction[0].Target.DisplayName != tt.displayName {
 			t.Errorf("error: got %s expected %s", respAction[0].Target.DisplayName, tt.displayName)
 		}
 	}
-
 }
