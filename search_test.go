@@ -53,17 +53,20 @@ func TestSearchEntities(t *testing.T) {
 		assert.Equal(t, "/search", r.URL.Path)
 		body, _ := io.ReadAll(r.Body)
 		assert.Equal(t, "{\"criteriaList\":[],\"logicalOperator\":\"AND\","+
-			"\"className\":\"VirtualMachine\",\"scope\":\"null\",\"environmentType\":\"\"}\n",
+			"\"className\":\"VirtualMachine\",\"scope\":\"null\",\"environmentType\":\"ONPREM\"}\n",
 			string(body))
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(mockResponse))
+		if _, err := w.Write([]byte(mockResponse)); err != nil {
+			t.Errorf("failed to write header: %s", err.Error())
+			t.FailNow()
+		}
 	}))
 	defer server.Close()
 
 	// Setup search criteria and request parameters
-	searchCriteria := SearchDTO{CriteriaList: []Criteria{}, LogicalOperator: "AND", ClassName: "VirtualMachine", Scope: "null"}
+	searchCriteria := SearchDTO{CriteriaList: []Criteria{}, LogicalOperator: "AND", ClassName: "VirtualMachine", Scope: "null", EnvironmentType: "ONPREM"}
 	reqParams := CommonReqParams{}
 
 	// Set the base URL for the client
@@ -111,7 +114,10 @@ func TestSearchEntityByName(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(mockResponse))
+		if _, err := w.Write([]byte(mockResponse)); err != nil {
+			t.Errorf("failed to create client: %s", err.Error())
+			t.FailNow()
+		}
 	}))
 	defer ts.Close()
 

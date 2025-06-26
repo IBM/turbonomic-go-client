@@ -27,6 +27,19 @@ type EntityRequest struct {
 	CommonReqOptions CommonReqParams
 }
 
+// Parameters for tagging an entity using Turbonomic's API
+type TagEntityRequest struct {
+	Uuid             string
+	Tags             []Tag
+	CommonReqOptions CommonReqParams
+}
+
+// Result for retriving an entity tag from Turbonomic's API
+type Tag struct {
+	Key    string   `json:"key"`
+	Values []string `json:"values"`
+}
+
 // Results from GetEntity request
 type EntityResults struct {
 	UUID            string `json:"uuid,omitempty"`
@@ -88,4 +101,51 @@ func (c *Client) GetEntity(reqOpts EntityRequest) (*EntityResults, error) {
 	}
 
 	return &entityResults, err
+}
+
+// Tags entity by provided entity uuid
+func (c *Client) TagEntity(reqOpts TagEntityRequest) ([]Tag, error) {
+
+	dtoBuf := new(bytes.Buffer)
+	if err := json.NewEncoder(dtoBuf).Encode(reqOpts.Tags); err != nil {
+		return nil, err
+	}
+
+	restResp, err := c.request(RequestOptions{Method: "POST", Path: "/entities/" + reqOpts.Uuid + "/tags", ReqDTO: dtoBuf,
+		CommonReqParams: CommonReqParams{
+			Headers:         reqOpts.CommonReqOptions.Headers,
+			QueryParameters: reqOpts.CommonReqOptions.QueryParameters}})
+
+	if err != nil {
+		return nil, err
+	}
+	slog.Debug(string(restResp))
+
+	var tagsResult []Tag
+	if err := json.Unmarshal(restResp, &tagsResult); err != nil {
+		return nil, err
+	}
+
+	return tagsResult, err
+}
+
+// Retrives entity tags by provided entity uuid
+func (c *Client) GetEntityTags(reqOpts EntityRequest) ([]Tag, error) {
+
+	restResp, err := c.request(RequestOptions{Method: "GET", Path: "/entities/" + reqOpts.Uuid + "/tags", ReqDTO: new(bytes.Buffer),
+		CommonReqParams: CommonReqParams{
+			Headers:         reqOpts.CommonReqOptions.Headers,
+			QueryParameters: reqOpts.CommonReqOptions.QueryParameters}})
+
+	if err != nil {
+		return nil, err
+	}
+	slog.Debug(string(restResp))
+
+	var tagsResult []Tag
+	if err := json.Unmarshal(restResp, &tagsResult); err != nil {
+		return nil, err
+	}
+
+	return tagsResult, err
 }

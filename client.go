@@ -40,6 +40,7 @@ type ClientParameters struct {
 	Password   string
 	OAuthCreds OAuthCreds
 	Skipverify bool
+	ApiInfo    ApiInfo
 }
 type OAuthCreds struct {
 	ClientId     string
@@ -47,13 +48,17 @@ type OAuthCreds struct {
 	Role         TurboRoles
 }
 
+type ApiInfo struct {
+	ApiOrigin string
+	Version   string
+}
 type T8cClient interface {
 	GetActionsByUUID(actionReq ActionsRequest) (ActionResults, error)
 	GetEntity(reqOpts EntityRequest) (*EntityResults, error)
+	GetEntityTags(reqOpts EntityRequest) ([]Tag, error)
+	TagEntity(reqOpts TagEntityRequest) ([]Tag, error)
 	SearchEntities(searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error)
 	SearchEntityByName(searchReq SearchRequest) (SearchResults, error)
-	getFilterType(entityType string) (string, error)
-	request(reqOpt RequestOptions) ([]byte, error)
 }
 
 // Turbonomic Client
@@ -158,6 +163,7 @@ func NewClient(clientParams *ClientParameters) (T8cClient, error) {
 			Timeout:   time.Minute,
 			Transport: customTransport,
 		},
+		apiInfo: clientParams.ApiInfo,
 	}
 
 	return clientAuth(client)

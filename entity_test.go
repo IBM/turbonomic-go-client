@@ -53,7 +53,10 @@ func TestGetEntity(t *testing.T) {
 
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(mockResponse))
+		if _, err := w.Write([]byte(mockResponse)); err != nil {
+			t.Errorf("failed to write header: %s", err.Error())
+			t.FailNow()
+		}
 	}))
 	defer ts.Close()
 
@@ -71,6 +74,106 @@ func TestGetEntity(t *testing.T) {
 	assert.Equal(t, "75941320319680", entityResults.UUID)
 	assert.Equal(t, "test-vm", entityResults.DisplayName)
 	assert.Equal(t, "VirtualMachine", entityResults.ClassName)
+}
+
+func TestTagEntity(t *testing.T) {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	client := &Client{
+		BaseURL: "/api/v3",
+		HTTPClient: &http.Client{
+			Transport: customTransport,
+		},
+	}
+
+	// Mock response from the Turbonomic API
+	mockResponse, err := os.ReadFile("./testfiles/TagEntity.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Create a test server with the mock response
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "POST", r.Method)
+		assert.Equal(t, "/entities/75941320319680/tags", r.URL.Path)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(mockResponse)); err != nil {
+			t.Errorf("failed to write header: %s", err.Error())
+			t.FailNow()
+		}
+	}))
+	defer ts.Close()
+
+	// Set the base URL for the client
+	client.BaseURL = ts.URL
+
+	// Create an TagEntityRequest with test parameters
+	tagEntityReq := TagEntityRequest{Uuid: "75941320319680", Tags: []Tag{{Key: "Turbo_Team", Values: []string{"AppInfra_Integrations"}}}}
+
+	// Call the TagEntity function
+	tagEntityResults, err := client.TagEntity(tagEntityReq)
+
+	// Assert that the function returned the expected result and no error
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(tagEntityResults))
+	assert.Equal(t, "Turbo_Team", tagEntityResults[0].Key)
+	assert.Equal(t, "AppInfra_Integrations", tagEntityResults[0].Values[0])
+	assert.Equal(t, "AppInfra_Integrations A", tagEntityResults[0].Values[1])
+	assert.Equal(t, "Turbo_Owner", tagEntityResults[1].Key)
+	assert.Equal(t, "Turbonomic_Appinfra_Integrations", tagEntityResults[1].Values[0])
+}
+
+func TestGetEntityTags(t *testing.T) {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+
+	client := &Client{
+		BaseURL: "/api/v3",
+		HTTPClient: &http.Client{
+			Transport: customTransport,
+		},
+	}
+
+	// Mock response from the Turbonomic API
+	mockResponse, err := os.ReadFile("./testfiles/TagEntity.json")
+	if err != nil {
+		log.Fatal("Error when opening file: ", err)
+	}
+
+	// Create a test server with the mock response
+	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		assert.Equal(t, "GET", r.Method)
+		assert.Equal(t, "/entities/75941320319680/tags", r.URL.Path)
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		if _, err := w.Write([]byte(mockResponse)); err != nil {
+			t.Errorf("failed to write header: %s", err.Error())
+			t.FailNow()
+		}
+	}))
+	defer ts.Close()
+
+	// Set the base URL for the client
+	client.BaseURL = ts.URL
+
+	// Create an EntityRequest with test parameters
+	entityReq := EntityRequest{Uuid: "75941320319680"}
+
+	// Call the GetEntityTags function
+	entityTagsResults, err := client.GetEntityTags(entityReq)
+
+	// Assert that the function returned the expected result and no error
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(entityTagsResults))
+	assert.Equal(t, "Turbo_Team", entityTagsResults[0].Key)
+	assert.Equal(t, "AppInfra_Integrations", entityTagsResults[0].Values[0])
+	assert.Equal(t, "AppInfra_Integrations A", entityTagsResults[0].Values[1])
+	assert.Equal(t, "Turbo_Owner", entityTagsResults[1].Key)
+	assert.Equal(t, "Turbonomic_Appinfra_Integrations", entityTagsResults[1].Values[0])
 }
 
 func TestTurboEntityIntegration(t *testing.T) {

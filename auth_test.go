@@ -35,12 +35,16 @@ func TestClientAuth_BasicAuth(t *testing.T) {
 			assert.Equal(t, "/api/v3/login", r.URL.Path)
 			body, _ := io.ReadAll(r.Body)
 			assert.Equal(t, "username=testuser&password=testpass", string(body))
+			assert.Equal(t, "Go-http-client/1.1", r.Header.Get("User-Agent"))
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"uuid":"1234567890","username":"administrator",
+			if _, err := w.Write([]byte(`{"uuid":"1234567890","username":"administrator",
 		"roles":[{"name":"ADMINISTRATOR"}],"loginProvider":"Local",
-		"authToken":"","showSharedUserSC":false}`))
+		"authToken":"","showSharedUserSC":false}`)); err != nil {
+				t.Fail()
+				t.Log(err)
+			}
 		}))
 	defer server.Close()
 
@@ -68,8 +72,11 @@ func TestClientAuth_OAuth2(t *testing.T) {
 
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"access_token": "admin_token",
-			"scope": "read write", "token_type": "Bearer", "expires_in": 3600}`))
+			if _, err := w.Write([]byte(`{"access_token": "admin_token",
+			"scope": "read write", "token_type": "Bearer", "expires_in": 3600}`)); err != nil {
+				t.Fail()
+				t.Log(err)
+			}
 		}))
 	defer server.Close()
 
@@ -103,4 +110,44 @@ func TestClientAuth_InvalidCredentials(t *testing.T) {
 
 	_, err := clientAuth(&authReq)
 	assert.Error(t, err)
+}
+
+func TestClientAuth_ProviderApiInfo(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "POST", r.Method)
+			assert.Equal(t, "/api/v3/login", r.URL.Path)
+			body, _ := io.ReadAll(r.Body)
+			assert.Equal(t, "username=testuser&password=testpass", string(body))
+			assert.Equal(t, "turbonomic-terraform-provider/1.1.0", r.Header.Get("User-Agent"))
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			if _, err := w.Write([]byte(`{"uuid":"1234567890","username":"administrator",
+		"roles":[{"name":"ADMINISTRATOR"}],"loginProvider":"Local",
+		"authToken":"","showSharedUserSC":false}`)); err != nil {
+				t.Fail()
+				t.Log(err)
+			}
+		}))
+	defer server.Close()
+
+	authReq := AuthRequest{
+		basePath:   "/api/v3",
+		hostname:   strings.Replace(server.URL, "https://", "", 1),
+		username:   "testuser",
+		password:   "testpass",
+		httpClient: server.Client(),
+		apiInfo: ApiInfo{
+			ApiOrigin: "turbonomic-terraform-provider",
+			Version:   "1.1.0",
+		},
+	}
+
+	client, err := clientAuth(&authReq)
+	assert.NoError(t, err)
+	assert.Equal(t, server.URL+"/api/v3", client.BaseURL)
+	assert.NotNil(t, client.HTTPClient)
+	assert.Equal(t, "turbonomic-terraform-provider/1.1.0", client.Headers["User-Agent"])
+
 }

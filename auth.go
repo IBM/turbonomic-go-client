@@ -33,6 +33,7 @@ type AuthRequest struct {
 	password   string
 	oAuthCreds OAuthCreds
 	httpClient *http.Client
+	apiInfo    ApiInfo
 }
 
 type oAuthResp struct {
@@ -45,6 +46,9 @@ type oAuthResp struct {
 // Creates authorized Turbonomic API Client
 func clientAuth(authreq *AuthRequest) (*Client, error) {
 	var client Client
+	if authreq == nil {
+		return nil, errors.New("please provide valid credentials")
+	}
 	urlPath, payload, err := setAuthParams(*authreq)
 
 	if err != nil {
@@ -56,8 +60,12 @@ func clientAuth(authreq *AuthRequest) (*Client, error) {
 		return nil, err
 	}
 
+	var apiOrigin = authreq.apiInfo.ApiOrigin
+	var version = authreq.apiInfo.Version
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
+	if apiOrigin != "" {
+		req.Header.Add("User-Agent", apiOrigin+"/"+version)
+	}
 	if (authreq.oAuthCreds.ClientId != "") && (authreq.oAuthCreds.ClientSecret != "") {
 		auth := authreq.oAuthCreds.ClientId + ":" + authreq.oAuthCreds.ClientSecret
 		req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth)))
@@ -94,7 +102,9 @@ func clientAuth(authreq *AuthRequest) (*Client, error) {
 	if result.AccessToken != "" {
 		client.Headers["Authorization"] = "Bearer " + result.AccessToken
 	}
-
+	if apiOrigin != "" {
+		client.Headers["User-Agent"] = apiOrigin + "/" + version
+	}
 	return &client, nil
 }
 

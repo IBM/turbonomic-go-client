@@ -242,7 +242,9 @@ func (c *Client) GetActionsByUUID(actionReq ActionsRequest) (ActionResults, erro
 	}
 
 	dtoBuf := new(bytes.Buffer)
-	json.NewEncoder(dtoBuf).Encode(actionCriteria)
+	if err := json.NewEncoder(dtoBuf).Encode(actionCriteria); err != nil {
+		return nil, err
+	}
 	urlPath := "/entities/" + actionReq.Uuid + "/actions"
 	reqDTO := RequestOptions{
 		Method: "POST",

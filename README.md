@@ -15,15 +15,20 @@ This library creates a client object by passing in a `ClientParameters` struct w
 - Hostname
 - Username
 - Password
+- ApiInfo
 
 Create a client with these parameters, similar to the following example:
 
 ```
 newClientOpts := ClientParameters{
-    Hostname: "TurboHostname",
-    Username: "TurboUsername",
-    Password: "TurboPassword",
-    }
+    Hostname:   "TurboHostname",
+    Username:   "TurboUsername",
+    Password:   "TurboPassword",
+    ApiInfo: ApiInfo{
+        ApiOrigin: "your-app-name", // e.g., "terraform-provider"
+        Version:   "version",         // version of your client or integration e.g : 1.0.0
+    },
+}
 
 turboClient, err := NewClient(&newClientOpts)
 if err != nil {
@@ -56,7 +61,15 @@ oauthCreds := OAuthCreds{
 You then pass the `OAuthCreds` struct with the Hostname of your Turbonomic instance to a `ClientParameters` struct to create a Turbonomic client:
 
 ```
-	newClientOpts := ClientParameters{Hostname: TurboHost, OAuthCreds: oauthCreds}
+    newClientOpts := ClientParameters{
+        Hostname:   TurboHost,
+        OAuthCreds: oauthCreds,
+        ApiInfo: ApiInfo{
+            ApiOrigin: "your-app-name",
+            Version:   "vesrion",
+        },
+    }
+
     if err != nil {
         panic(err)
     }

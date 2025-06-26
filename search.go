@@ -26,6 +26,7 @@ type SearchRequest struct {
 	Name             string
 	EntityType       string
 	EnvironmentType  string
+	CloudType        string
 	CaseSensitive    bool
 	CommonReqParams  CommonReqParams
 	SearchParameters map[string]string
@@ -45,7 +46,8 @@ type SearchDTO struct {
 	LogicalOperator string     `json:"logicalOperator"`
 	ClassName       string     `json:"className"`
 	Scope           string     `json:"scope,omitempty"`
-	EnvironmentType string     `json:"environmentType"`
+	EnvironmentType string     `json:"environmentType,omitempty"`
+	CloudType       string     `json:"cloudType,omitempty"`
 }
 
 // Results of a search request to Turbonomic's API
@@ -175,6 +177,7 @@ func (c *Client) SearchEntityByName(searchReq SearchRequest) (SearchResults, err
 
 	searchCriteria := SearchDTO{
 		EnvironmentType: searchReq.EnvironmentType,
+		CloudType:       searchReq.CloudType,
 		LogicalOperator: "OR",
 		ClassName:       searchReq.EntityType,
 		CriteriaList: []Criteria{
@@ -194,7 +197,9 @@ func (c *Client) SearchEntities(
 	searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error) {
 
 	dtoBuf := new(bytes.Buffer)
-	json.NewEncoder(dtoBuf).Encode(searchCriteria)
+	if err := json.NewEncoder(dtoBuf).Encode(searchCriteria); err != nil {
+		return nil, err
+	}
 
 	restResp, err := c.request(RequestOptions{Method: "POST", Path: "/search", ReqDTO: dtoBuf,
 		CommonReqParams: CommonReqParams{
