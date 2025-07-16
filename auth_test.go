@@ -25,6 +25,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/IBM/turbonomic-go-client/logging"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -56,7 +57,8 @@ func TestClientAuth_BasicAuth(t *testing.T) {
 		httpClient: server.Client(),
 	}
 
-	client, err := clientAuth(&authReq)
+	emptyLogConfig := logging.SetLogConfig([]logging.LoggingOption{})
+	client, err := clientAuth(&authReq, emptyLogConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, server.URL+"/api/v3", client.BaseURL)
 	assert.NotNil(t, client.HTTPClient)
@@ -91,7 +93,60 @@ func TestClientAuth_OAuth2(t *testing.T) {
 		httpClient: server.Client(),
 	}
 
-	client, err := clientAuth(&authReq)
+	emptyLogConfig := logging.SetLogConfig([]logging.LoggingOption{})
+	client, err := clientAuth(&authReq, emptyLogConfig)
+	assert.NoError(t, err)
+	assert.Equal(t, server.URL+"/api/v3", client.BaseURL)
+	assert.NotNil(t, client.HTTPClient)
+	assert.Equal(t, "Bearer admin_token", client.Headers["Authorization"])
+}
+
+func TestClientAuth_OAuth2POST(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			body, err := io.ReadAll(r.Body)
+			if err != nil {
+				http.Error(w, "error reading body", http.StatusBadRequest)
+			}
+			defer r.Body.Close()
+			bodyStr := string(body)
+
+			switch {
+			case r.URL.Path == "/oauth2/token" && r.Method == "POST" && !strings.Contains(bodyStr, "client_id"):
+				assert.Equal(t, "POST", r.Method)
+				assert.Equal(t, "/oauth2/token", r.URL.Path)
+				assert.Equal(t, "grant_type=client_credentials&scope=role:OBSERVER", string(body))
+
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusUnauthorized)
+			default:
+				assert.Equal(t, "POST", r.Method)
+				assert.Equal(t, "/oauth2/token", r.URL.Path)
+				assert.Equal(t, "grant_type=client_credentials&scope=role:OBSERVER&client_id=test_client&client_secret=test_secret", string(body))
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				if _, err := w.Write([]byte(`{"access_token": "admin_token",
+			"scope": "read write", "token_type": "Bearer", "expires_in": 3600}`)); err != nil {
+					t.Fail()
+					t.Log(err)
+				}
+			}
+		}))
+	defer server.Close()
+
+	authReq := AuthRequest{
+		basePath: "/api/v3",
+		hostname: strings.Replace(server.URL, "https://", "", 1),
+		oAuthCreds: OAuthCreds{
+			ClientId:     "test_client",
+			ClientSecret: "test_secret",
+			Role:         OBSERVER,
+		},
+		httpClient: server.Client(),
+	}
+
+	emptyLogConfig := logging.SetLogConfig([]logging.LoggingOption{})
+	client, err := clientAuth(&authReq, emptyLogConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, server.URL+"/api/v3", client.BaseURL)
 	assert.NotNil(t, client.HTTPClient)
@@ -107,8 +162,8 @@ func TestClientAuth_InvalidCredentials(t *testing.T) {
 				w.WriteHeader(http.StatusBadRequest)
 			})).Client(),
 	}
-
-	_, err := clientAuth(&authReq)
+	emptyLogConfig := logging.SetLogConfig([]logging.LoggingOption{})
+	_, err := clientAuth(&authReq, emptyLogConfig)
 	assert.Error(t, err)
 }
 
@@ -143,8 +198,8 @@ func TestClientAuth_ProviderApiInfo(t *testing.T) {
 			Version:   "1.1.0",
 		},
 	}
-
-	client, err := clientAuth(&authReq)
+	emptyLogConfig := logging.SetLogConfig([]logging.LoggingOption{})
+	client, err := clientAuth(&authReq, emptyLogConfig)
 	assert.NoError(t, err)
 	assert.Equal(t, server.URL+"/api/v3", client.BaseURL)
 	assert.NotNil(t, client.HTTPClient)

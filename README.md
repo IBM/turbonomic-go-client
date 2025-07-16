@@ -127,3 +127,20 @@ To retrieve action data, pass an `ActionsRequest` struct to the `GetActions` met
 
     actions, err := GetActionsByUUID(actionReq)
 ```
+
+## Logging
+
+Additional logging can be enabled via the `T8C_LOG` environment variable.  Valid values are:
+
+- `INFO`
+- `DEBUG`
+- `WARN`
+- `ERROR`
+
+Note, the values are case insensitive.
+
+### Example
+
+```
+export T8C_LOG=debug
+```

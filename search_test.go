@@ -21,7 +21,6 @@ package turboclient
 import (
 	"crypto/tls"
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -44,7 +43,7 @@ func TestSearchEntities(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchAllVms.json")
 	if err != nil {
-		log.Fatal("Error when opening file: ", err)
+		t.Fatal("Error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
@@ -98,7 +97,7 @@ func TestSearchEntityByName(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchEntityByName.json")
 	if err != nil {
-		log.Fatal("Error when opening file: ", err)
+		t.Fatal("Error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response

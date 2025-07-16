@@ -18,7 +18,6 @@ package turboclient
 import (
 	"bytes"
 	"encoding/json"
-	"log/slog"
 )
 
 // Parameters for retriving an entity from Turbonomic's API
@@ -93,7 +92,7 @@ func (c *Client) GetEntity(reqOpts EntityRequest) (*EntityResults, error) {
 	if err != nil {
 		return nil, err
 	}
-	slog.Debug(string(restResp))
+	c.Logger.Debug(c.Ctx, string(restResp))
 
 	var entityResults EntityResults
 	if err := json.Unmarshal(restResp, &entityResults); err != nil {
@@ -119,7 +118,7 @@ func (c *Client) TagEntity(reqOpts TagEntityRequest) ([]Tag, error) {
 	if err != nil {
 		return nil, err
 	}
-	slog.Debug(string(restResp))
+	c.Logger.Debug(c.Ctx, string(restResp))
 
 	var tagsResult []Tag
 	if err := json.Unmarshal(restResp, &tagsResult); err != nil {
@@ -140,7 +139,7 @@ func (c *Client) GetEntityTags(reqOpts EntityRequest) ([]Tag, error) {
 	if err != nil {
 		return nil, err
 	}
-	slog.Debug(string(restResp))
+	c.Logger.Debug(c.Ctx, string(restResp))
 
 	var tagsResult []Tag
 	if err := json.Unmarshal(restResp, &tagsResult); err != nil {

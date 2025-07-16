@@ -19,13 +19,14 @@
 package turboclient
 
 import (
+	"context"
 	"crypto/tls"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 
+	"github.com/IBM/turbonomic-go-client/logging"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,12 +39,14 @@ func TestGetEntity(t *testing.T) {
 		HTTPClient: &http.Client{
 			Transport: customTransport,
 		},
+		Logger: logging.NewSlogLogger(),
+		Ctx:    context.Background(),
 	}
 
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/GetEntity.json")
 	if err != nil {
-		log.Fatal("Error when opening file: ", err)
+		t.Fatal("Error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
@@ -85,12 +88,14 @@ func TestTagEntity(t *testing.T) {
 		HTTPClient: &http.Client{
 			Transport: customTransport,
 		},
+		Logger: logging.NewSlogLogger(),
+		Ctx:    context.Background(),
 	}
 
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/TagEntity.json")
 	if err != nil {
-		log.Fatal("Error when opening file: ", err)
+		t.Fatal("Error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
@@ -135,12 +140,14 @@ func TestGetEntityTags(t *testing.T) {
 		HTTPClient: &http.Client{
 			Transport: customTransport,
 		},
+		Logger: logging.NewSlogLogger(),
+		Ctx:    context.Background(),
 	}
 
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/TagEntity.json")
 	if err != nil {
-		log.Fatal("Error when opening file: ", err)
+		t.Fatal("Error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response

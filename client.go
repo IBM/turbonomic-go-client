@@ -17,6 +17,7 @@ package turboclient
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"errors"
 	"io"
@@ -25,6 +26,8 @@ import (
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/IBM/turbonomic-go-client/logging"
 )
 
 // Default base path of Turbonomic API
@@ -66,6 +69,8 @@ type Client struct {
 	BaseURL    string
 	HTTPClient *http.Client
 	Headers    map[string]string
+	Logger     logging.LoggerCustom
+	Ctx        context.Context
 }
 
 type CommonReqParams struct {
@@ -138,7 +143,10 @@ func GetRolefromString(role string) TurboRoles {
 }
 
 // Creates a new instance of the Turbonomic Client
-func NewClient(clientParams *ClientParameters) (T8cClient, error) {
+func NewClient(clientParams *ClientParameters, options ...logging.LoggingOption) (T8cClient, error) {
+
+	logConfig := logging.SetLogConfig(options)
+
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	if clientParams.Skipverify {
 		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: clientParams.Skipverify}
@@ -166,7 +174,7 @@ func NewClient(clientParams *ClientParameters) (T8cClient, error) {
 		apiInfo: clientParams.ApiInfo,
 	}
 
-	return clientAuth(client)
+	return clientAuth(client, logConfig)
 
 }
 
