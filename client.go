@@ -62,6 +62,7 @@ type T8cClient interface {
 	TagEntity(reqOpts TagEntityRequest) ([]Tag, error)
 	SearchEntities(searchCriteria SearchDTO, reqParams CommonReqParams) (SearchResults, error)
 	SearchEntityByName(searchReq SearchRequest) (SearchResults, error)
+	GetStats(statsReq StatsRequest) (StatsResponse, error)
 }
 
 // Turbonomic Client

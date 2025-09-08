@@ -1,0 +1,14 @@
+[
+    {
+        "key": "Turbo_Team",
+        "values": [
+        "AppInfra_Integrations", "AppInfra_Integrations A"
+        ]
+    },
+    {
+        "key": "Turbo_Owner",
+        "values": [
+        "Turbonomic_Appinfra_Integrations"
+        ]
+    }
+]

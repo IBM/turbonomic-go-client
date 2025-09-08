@@ -18,7 +18,6 @@ package turboclient
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 )
 
 // Parameters for retriving actions from Turbonomic's API
@@ -40,16 +39,16 @@ type ActionsCriteria struct {
 
 // Results of GetActions Turbonomc API call
 type ActionResults []struct {
-	UUID           string    `json:"uuid"`
-	DisplayName    string    `json:"displayName"`
-	ActionImpactID int64     `json:"actionImpactID"`
-	MarketID       int       `json:"marketID"`
-	CreateTime     time.Time `json:"createTime"`
-	ActionType     string    `json:"actionType"`
-	ActionState    string    `json:"actionState"`
-	ActionMode     string    `json:"actionMode"`
-	Details        string    `json:"details"`
-	Importance     float32   `json:"importance"`
+	UUID           string  `json:"uuid"`
+	DisplayName    string  `json:"displayName"`
+	ActionImpactID int64   `json:"actionImpactID"`
+	MarketID       int     `json:"marketID"`
+	CreateTime     string  `json:"createTime"`
+	ActionType     string  `json:"actionType"`
+	ActionState    string  `json:"actionState"`
+	ActionMode     string  `json:"actionMode"`
+	Details        string  `json:"details"`
+	Importance     float32 `json:"importance"`
 	Target         struct {
 		UUID            string `json:"uuid"`
 		DisplayName     string `json:"displayName"`
@@ -58,27 +57,15 @@ type ActionResults []struct {
 		DiscoveredBy    struct {
 			UUID              string `json:"uuid"`
 			DisplayName       string `json:"displayName"`
+			Category          string `json:"category"`
 			IsProbeRegistered bool   `json:"isProbeRegistered"`
 			Type              string `json:"type"`
 			Readonly          bool   `json:"readonly"`
 		} `json:"discoveredBy"`
-		VendorIds struct {
-			Vmturbodev string `json:"vmturbodev"`
-		} `json:"vendorIds"`
-		State   string `json:"state"`
-		Aspects struct {
-			CloudAspect struct {
-				BusinessAccount struct {
-					UUID        string `json:"uuid"`
-					DisplayName string `json:"displayName"`
-					ClassName   string `json:"className"`
-				} `json:"businessAccount"`
-				Type string `json:"type"`
-			} `json:"cloudAspect"`
-		} `json:"aspects"`
-		Tags struct {
-			Name []string `json:"Name"`
-		} `json:"tags"`
+		VendorIds map[string]string   `json:"vendorIds"`
+		State     string              `json:"state"`
+		Aspects   json.RawMessage     `json:"aspects"`
+		Tags      map[string][]string `json:"tags"`
 	} `json:"target"`
 	CurrentEntity struct {
 		UUID            string `json:"uuid"`
@@ -88,14 +75,13 @@ type ActionResults []struct {
 		DiscoveredBy    struct {
 			UUID              string `json:"uuid"`
 			DisplayName       string `json:"displayName"`
+			Category          string `json:"category"`
 			IsProbeRegistered bool   `json:"isProbeRegistered"`
 			Type              string `json:"type"`
 			Readonly          bool   `json:"readonly"`
 		} `json:"discoveredBy"`
-		VendorIds struct {
-			Standard string `json:"Standard"`
-		} `json:"vendorIds"`
-		State string `json:"state"`
+		VendorIds map[string]string `json:"vendorIds"`
+		State     string            `json:"state"`
 	} `json:"currentEntity"`
 	NewEntity struct {
 		UUID            string `json:"uuid"`
@@ -105,16 +91,19 @@ type ActionResults []struct {
 		DiscoveredBy    struct {
 			UUID              string `json:"uuid"`
 			DisplayName       string `json:"displayName"`
+			Category          string `json:"category"`
 			IsProbeRegistered bool   `json:"isProbeRegistered"`
 			Type              string `json:"type"`
 			Readonly          bool   `json:"readonly"`
 		} `json:"discoveredBy"`
-		VendorIds struct{} `json:"vendorIds"`
-		State     string   `json:"state"`
+		VendorIds map[string]string `json:"vendorIds"`
+		State     string            `json:"state"`
 	} `json:"newEntity"`
-	CurrentValue string `json:"currentValue"`
-	NewValue     string `json:"newValue"`
-	Template     struct {
+	CurrentValue    string `json:"currentValue"`
+	NewValue        string `json:"newValue"`
+	ValueUnits      string `json:"valueUnits"`
+	ResizeAttribute string `json:"resizeAttribute"`
+	Template        struct {
 		UUID        string `json:"uuid"`
 		DisplayName string `json:"displayName"`
 		ClassName   string `json:"className"`
@@ -122,17 +111,18 @@ type ActionResults []struct {
 		EnableMatch bool   `json:"enableMatch"`
 	} `json:"template"`
 	Risk struct {
-		SubCategory string  `json:"subCategory"`
-		Description string  `json:"description"`
-		Severity    string  `json:"severity"`
-		Importance  float32 `json:"importance"`
+		SubCategory       string   `json:"subCategory"`
+		Description       string   `json:"description"`
+		Severity          string   `json:"severity"`
+		Importance        float32  `json:"importance"`
+		ReasonCommodities []string `json:"reasonCommodities"`
 	} `json:"risk"`
 	Stats []struct {
 		Name    string `json:"name"`
 		Filters []struct {
-			Type        string      `json:"type"`
-			Value       string      `json:"value"`
-			DisplayName interface{} `json:"displayName"`
+			Type        string `json:"type"`
+			Value       string `json:"value"`
+			DisplayName string `json:"displayName"`
 		} `json:"filters"`
 		Units string  `json:"units"`
 		Value float64 `json:"value"`
@@ -150,7 +140,7 @@ type ActionResults []struct {
 			Type              string `json:"type"`
 			Readonly          bool   `json:"readonly"`
 		} `json:"discoveredBy"`
-		VendorIds struct{} `json:"vendorIds"`
+		VendorIds map[string]string `json:"vendorIds"`
 	} `json:"currentLocation"`
 	NewLocation struct {
 		UUID            string `json:"uuid"`
@@ -165,7 +155,7 @@ type ActionResults []struct {
 			Type              string `json:"type"`
 			Readonly          bool   `json:"readonly"`
 		} `json:"discoveredBy"`
-		VendorIds struct{} `json:"vendorIds"`
+		VendorIds map[string]string `json:"vendorIds"`
 	} `json:"newLocation"`
 	CompoundActions []struct {
 		DisplayName string `json:"displayName"`
@@ -181,15 +171,14 @@ type ActionResults []struct {
 			DiscoveredBy    struct {
 				UUID              string `json:"uuid"`
 				DisplayName       string `json:"displayName"`
+				Category          string `json:"category"`
 				IsProbeRegistered bool   `json:"isProbeRegistered"`
 				Type              string `json:"type"`
 				Readonly          bool   `json:"readonly"`
 			} `json:"discoveredBy"`
-			VendorIds struct{} `json:"vendorIds"`
-			State     string   `json:"state"`
-			Tags      struct {
-				Name []string `json:"Name"`
-			} `json:"tags"`
+			VendorIds map[string]string   `json:"vendorIds"`
+			State     string              `json:"state"`
+			Tags      map[string][]string `json:"tags"`
 		} `json:"target"`
 		CurrentEntity struct {
 			UUID            string `json:"uuid"`
@@ -199,14 +188,13 @@ type ActionResults []struct {
 			DiscoveredBy    struct {
 				UUID              string `json:"uuid"`
 				DisplayName       string `json:"displayName"`
+				Category          string `json:"category"`
 				IsProbeRegistered bool   `json:"isProbeRegistered"`
 				Type              string `json:"type"`
 				Readonly          bool   `json:"readonly"`
 			} `json:"discoveredBy"`
-			VendorIds struct {
-				Standard string `json:"Standard"`
-			} `json:"vendorIds"`
-			State string `json:"state"`
+			VendorIds map[string]string `json:"vendorIds"`
+			State     string            `json:"state"`
 		} `json:"currentEntity"`
 		NewEntity struct {
 			UUID            string `json:"uuid"`
@@ -216,17 +204,25 @@ type ActionResults []struct {
 			DiscoveredBy    struct {
 				UUID              string `json:"uuid"`
 				DisplayName       string `json:"displayName"`
+				Category          string `json:"category"`
 				IsProbeRegistered bool   `json:"isProbeRegistered"`
 				Type              string `json:"type"`
 				Readonly          bool   `json:"readonly"`
 			} `json:"discoveredBy"`
-			VendorIds struct {
-				Standard string `json:"Standard"`
-			} `json:"vendorIds"`
-			State string `json:"state"`
+			VendorIds map[string]string `json:"vendorIds"`
+			State     string            `json:"state"`
 		} `json:"newEntity"`
-		CurrentValue string `json:"currentValue"`
-		NewValue     string `json:"newValue"`
+		CurrentValue    string `json:"currentValue"`
+		NewValue        string `json:"newValue"`
+		ValueUnits      string `json:"valueUnits"`
+		ResizeAttribute string `json:"resizeAttribute"`
+		Risk            struct {
+			SubCategory       string   `json:"subCategory"`
+			Description       string   `json:"description"`
+			Severity          string   `json:"severity"`
+			Importance        float32  `json:"importance"`
+			ReasonCommodities []string `json:"reasonCommodities"`
+		} `json:"risk"`
 	} `json:"compoundActions"`
 	Source   string `json:"source"`
 	ActionID int64  `json:"actionID"`
@@ -254,14 +250,12 @@ func (c *Client) GetActionsByUUID(actionReq ActionsRequest) (ActionResults, erro
 			Headers:         actionReq.Headers,
 			QueryParameters: actionReq.QueryParameters}}
 
-	//   QueryParameters{actionReq.QueryParameters}
 	restResp, err := c.request(reqDTO)
 	if err != nil {
 		return nil, err
 	}
 
 	var actionResults ActionResults
-	// json.Unmarshal(restResp, &actionResults)
 
 	if err := json.Unmarshal(restResp, &actionResults); err != nil {
 		return nil, err

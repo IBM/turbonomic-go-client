@@ -1,0 +1,25 @@
+[
+    {
+        "uuid": "75928674621956",
+        "displayName": "test-vm",
+        "className": "VirtualMachine",
+        "environmentType": "ONPREM",
+        "discoveredBy": {
+            "uuid": "75928666479696",
+            "displayName": "vc1.turbo.com",
+            "category": "Hypervisor",
+            "isProbeRegistered": false,
+            "type": "vCenter",
+            "readonly": false
+        },
+        "vendorIds": {
+            "vc1.turbo.com": "vm-121"
+        },
+        "state": "ACTIVE",
+        "severity": "Normal",
+        "severityBreakdown": {
+            "NORMAL": 1
+        },
+        "controllable": true
+    }
+]

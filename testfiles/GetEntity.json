@@ -1,0 +1,40 @@
+{
+    "uuid": "75941320319680",
+    "displayName": "test-vm",
+    "className": "VirtualMachine",
+    "environmentType": "ONPREM",
+    "discoveredBy": {
+        "uuid": "75941320095008",
+        "displayName": "vc1.turbo.com",
+        "category": "Hypervisor",
+        "isProbeRegistered": false,
+        "type": "vCenter",
+        "readonly": false
+    },
+    "vendorIds": {
+        "vc1.turbo.com": "vm-14716"
+    },
+    "state": "ACTIVE",
+    "severity": "Critical",
+    "severityBreakdown": {
+        "CRITICAL": 1
+    },
+    "providers": [
+        {
+        "uuid": "75941320318323",
+        "displayName": "esx45.turbo.com",
+        "className": "PhysicalMachine"
+        },
+        {
+        "uuid": "75941320318400",
+        "displayName": "Resources-VC1DC1C1",
+        "className": "VirtualDataCenter"
+        },
+        {
+        "uuid": "75941320318305",
+        "displayName": "Datastore:VC1DS1",
+        "className": "Storage"
+        }
+    ],
+    "staleness": "CURRENT"
+    }

@@ -1,0 +1,84 @@
+[{
+    "uuid": "638911097668880",
+    "displayName": "MANUAL",
+    "actionImpactID": 638911097668880,
+    "marketID": 777777,
+    "createTime": "2025-04-25T01:46:29Z",
+    "actionType": "RESIZE",
+    "actionState": "READY",
+    "actionMode": "MANUAL",
+    "details": "Resize up VMem for Virtual Machine test-vm from 1 GB to 2 GB",
+    "importance": -1.0,
+    "target": {
+        "uuid": "75941320319680",
+        "displayName": "test-vm",
+        "className": "VirtualMachine",
+        "environmentType": "ONPREM",
+        "discoveredBy": {
+            "uuid": "75941320095008",
+            "displayName": "vc1.test.dc1.com",
+            "isProbeRegistered": false,
+            "type": "vCenter",
+            "readonly": false
+        },
+        "vendorIds": {
+            "vc1.test.dc1.com": "vm-14716"
+        },
+        "state": "ACTIVE",
+        "connectedEntities": [
+            {
+                "uuid": "75941320318323",
+                "displayName": "VC1DC1/VC1DC1C1-TestENV",
+                "className": "Cluster"
+            }
+        ]
+    },
+    "currentValue": "1048576.0",
+    "newValue": "2097152.0",
+    "valueUnits": "KB",
+    "risk": {
+        "subCategory": "Performance Assurance",
+        "description": "VMem Congestion in Virtual Machine test-vm",
+        "severity": "CRITICAL",
+        "importance": 0.0,
+        "reasonCommodities": [
+            "VMem"
+        ]
+    },
+    "currentLocation": {
+        "uuid": "75941320318288",
+        "displayName": "VC1DC1",
+        "className": "DataCenter",
+        "environmentType": "ONPREM",
+        "discoveredBy": {
+            "uuid": "75941320095008",
+            "displayName": "vc1.test.dc1.com",
+            "category": "Hypervisor",
+            "isProbeRegistered": false,
+            "type": "vCenter",
+            "readonly": false
+        },
+        "vendorIds": {
+            "vc1.test.dc1.com": "datacenter-1001"
+        }
+    },
+    "newLocation": {
+        "uuid": "75941320318288",
+        "displayName": "VC1DC1",
+        "className": "DataCenter",
+        "environmentType": "ONPREM",
+        "discoveredBy": {
+            "uuid": "75941320095008",
+            "displayName": "vc1.test.dc1.com",
+            "category": "Hypervisor",
+            "isProbeRegistered": false,
+            "type": "vCenter",
+            "readonly": false
+        },
+        "vendorIds": {
+            "vc1.test.dc1.com": "datacenter-1001"
+        }
+    },
+    "source": "MARKET",
+    "actionID": 638911097668880
+}]

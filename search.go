@@ -21,6 +21,57 @@ import (
 	"fmt"
 )
 
+var entityNameMap = map[string]string{
+	"ApplicationComponentSpec": "appComponentSpecsByName",
+	"ApplicationComponent":     "appCompsByName",
+	"AvailabilityZone":         "zonsByName",
+	"BillingFamily":            "billingFamilyByName",
+	"BusinessAccountFolder":    "businessAccountFolderByName",
+	"BusinessAccount":          "businessAccountByName",
+	"BusinessApplication":      "busAppsByName",
+	"BusinessTransaction":      "busTransByName",
+	"BusinessUser":             "businessUserByName",
+	"Chassis":                  "chasByName",
+	"Cluster":                  "clustersByName",
+	"ComputeTier":              "computeTiersByName",
+	"ContainerPlatformCluster": "containerPlatformClustersByName",
+	"Container":                "containersByName",
+	"ContainerPod":             "containerPodsByName",
+	"ContainerSpec":            "containerSpecsByName",
+	"DataCenter":               "datacentersByName",
+	"Database":                 "databaseByName",
+	"DatabaseServer":           "databaseServerByName",
+	"DatabaseServerTier":       "databaseServerTiersByName",
+	"DatabaseTier":             "databaseTiersByName",
+	"DesktopPool":              "desktopPoolByName",
+	"DiskArray":                "diskarrayByName",
+	"DocumentCollection":       "dcByName",
+	"Group":                    "groupsByName",
+	"IOModule":                 "ioModuleByName",
+	"Internet":                 "internetByName",
+	"LoadBalancer":             "lbsByName",
+	"LogicalPool":              "logicalPoolByName",
+	"Namespace":                "namespacesByName",
+	"Network":                  "netsByName",
+	"PhysicalMachine":          "pmsByName",
+	"Region":                   "regsByName",
+	"ResourceGroup":            "resourceGroupByName",
+	"Service":                  "servicesByName",
+	"Storage":                  "storageByName",
+	"StorageCluster":           "storageClustersByName",
+	"StorageController":        "storagecontrollerByName",
+	"StorageTier":              "storageTierByName",
+	"Switch":                   "switchByName",
+	"ViewPod":                  "viewPodByName",
+	"VirtualDataCenter":        "vdcsByName",
+	"VirtualMachine":           "vmsByName",
+	"VirtualMachineCluster":    "virtualMachineClustersByName",
+	"VirtualMachineSpec":       "virtualMachineSpecsByName",
+	"VirtualVolume":            "virtualVolumeByName",
+	"Workload":                 "workloadByName",
+	"WorkloadController":       "workloadControllersByName",
+}
+
 // Parameters for searching Turbonomic's API
 type SearchRequest struct {
 	Name             string
@@ -220,12 +271,8 @@ func (c *Client) SearchEntities(
 // Helper function to enable the use of entity type as the filter instead of
 // longer parameter names required by Turbonomic's API
 func (c *Client) getFilterType(entityType string) (string, error) {
-	entityMap := map[string]string{
-		"VirtualMachine": "vmsByName",
-		"VirtualVolume":  "virtualVolumeByName",
-		"DatabaseServer": "databaseByName",
-	}
-	filterType := entityMap[entityType]
+
+	filterType := entityNameMap[entityType]
 	if filterType != "" {
 		return filterType, nil
 	}

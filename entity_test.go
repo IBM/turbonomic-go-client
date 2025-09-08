@@ -26,8 +26,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/IBM/turbonomic-go-client/logging"
 	"github.com/stretchr/testify/assert"
+	"github.com/IBM/turbonomic-go-client/logging"
 )
 
 func TestGetEntity(t *testing.T) {
