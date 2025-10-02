@@ -49,7 +49,6 @@ var entityNameMap = map[string]string{
 	"Group":                    "groupsByName",
 	"IOModule":                 "ioModuleByName",
 	"Internet":                 "internetByName",
-	"LoadBalancer":             "lbsByName",
 	"LogicalPool":              "logicalPoolByName",
 	"Namespace":                "namespacesByName",
 	"Network":                  "netsByName",
@@ -68,8 +67,13 @@ var entityNameMap = map[string]string{
 	"VirtualMachineCluster":    "virtualMachineClustersByName",
 	"VirtualMachineSpec":       "virtualMachineSpecsByName",
 	"VirtualVolume":            "virtualVolumeByName",
-	"Workload":                 "workloadByName",
 	"WorkloadController":       "workloadControllersByName",
+}
+
+// Map of entity types to their corresponding vendor ID filter types
+var vendorIdFilterMap = map[string]string{
+	"VirtualMachine": "vmsByVendorId",
+	"VirtualVolume":  "volumeById",
 }
 
 // Parameters for searching Turbonomic's API
@@ -78,9 +82,16 @@ type SearchRequest struct {
 	EntityType       string
 	EnvironmentType  string
 	CloudType        string
+	OSNames          []string
 	CaseSensitive    bool
 	CommonReqParams  CommonReqParams
 	SearchParameters map[string]string
+}
+type SearchRequestByVendorId struct {
+	EntityType      string
+	VendorId        string
+	CaseSensitive   bool
+	CommonReqParams CommonReqParams
 }
 
 // Criterion for a Turbonomic API search request
@@ -114,11 +125,11 @@ type SearchResults []struct {
 		Type        string `json:"type"`
 		Readonly    bool   `json:"readonly"`
 	} `json:"discoveredBy"`
-	VendorIds         struct{} `json:"vendorIds"`
-	State             string   `json:"state"`
-	Severity          string   `json:"severity"`
-	CostPrice         float64  `json:"costPrice"`
-	SeverityBreakdown struct{} `json:"severityBreakdown"`
+	VendorIds         map[string]string `json:"vendorIds"`
+	State             string            `json:"state"`
+	Severity          string            `json:"severity"`
+	CostPrice         float64           `json:"costPrice"`
+	SeverityBreakdown struct{}          `json:"severityBreakdown"`
 	Template          struct {
 		Price       float64 `json:"price"`
 		Discovered  bool    `json:"discovered"`
@@ -225,22 +236,14 @@ func (c *Client) SearchEntityByName(searchReq SearchRequest) (SearchResults, err
 	if err != nil {
 		return SearchResults{}, err
 	}
+	searchCriteria := c.getSearchCriteria(searchReq, filterType)
 
-	searchCriteria := SearchDTO{
-		EnvironmentType: searchReq.EnvironmentType,
-		CloudType:       searchReq.CloudType,
-		LogicalOperator: "OR",
-		ClassName:       searchReq.EntityType,
-		CriteriaList: []Criteria{
-			{
-				CaseSensitive: searchReq.CaseSensitive,
-				ExpType:       "EQ",
-				ExpVal:        searchReq.Name,
-				FilterType:    filterType,
-			},
-		},
-	}
+	return c.SearchEntities(searchCriteria, searchReq.CommonReqParams)
+}
 
+// Retrives the results of a search of Turbonomic's API based on provided parameters
+func (c *Client) SearchEntityByVendorId(searchReq SearchRequestByVendorId) (SearchResults, error) {
+	searchCriteria := c.getSearchVendorIdCriteria(searchReq)
 	return c.SearchEntities(searchCriteria, searchReq.CommonReqParams)
 }
 
@@ -277,4 +280,72 @@ func (c *Client) getFilterType(entityType string) (string, error) {
 		return filterType, nil
 	}
 	return "", fmt.Errorf("entity type of %s not supported", entityType)
+}
+
+// Create searchCriteria using searchRequest parameters
+func (c *Client) getSearchCriteria(searchReq SearchRequest, filterType string) SearchDTO {
+	criteriaList := []Criteria{
+		{
+			CaseSensitive: searchReq.CaseSensitive,
+			ExpType:       "EQ",
+			ExpVal:        searchReq.Name,
+			FilterType:    filterType,
+		},
+	}
+	if len(searchReq.CloudType) > 0 {
+		criteriaList = append(criteriaList, Criteria{
+			CaseSensitive: false,
+			ExpType:       "EQ",
+			ExpVal:        searchReq.CloudType,
+			FilterType:    "vmsByCloudProvider",
+		})
+	}
+	if len(searchReq.OSNames) > 0 {
+		expValue := ""
+		for i, osName := range searchReq.OSNames {
+			if len(osName) > 0 {
+				expValue = expValue + osName + ".*"
+				if i != len(searchReq.OSNames)-1 {
+					expValue = expValue + "|"
+				}
+			}
+		}
+		if len(expValue) > 0 {
+			criteriaList = append(criteriaList, Criteria{
+				CaseSensitive: false,
+				ExpType:       "RXEQ",
+				ExpVal:        expValue,
+				FilterType:    "vmsByGuestName",
+			})
+		}
+	}
+
+	searchCriteria := SearchDTO{
+		EnvironmentType: searchReq.EnvironmentType,
+		LogicalOperator: "AND",
+		ClassName:       searchReq.EntityType,
+		CriteriaList:    criteriaList,
+	}
+	return searchCriteria
+}
+
+func (c *Client) getSearchVendorIdCriteria(searchReq SearchRequestByVendorId) SearchDTO {
+	var criteriaList []Criteria
+	if len(searchReq.VendorId) > 0 {
+		// Only add the criteria if the entity type has a mapping in vendorIdFilterMap
+		if filterType, exists := vendorIdFilterMap[searchReq.EntityType]; exists {
+			criteriaList = append(criteriaList, Criteria{
+				CaseSensitive: searchReq.CaseSensitive,
+				ExpType:       "RXEQ",
+				ExpVal:        searchReq.VendorId,
+				FilterType:    filterType,
+			})
+		}
+	}
+	searchCriteria := SearchDTO{
+		LogicalOperator: "AND",
+		ClassName:       searchReq.EntityType,
+		CriteriaList:    criteriaList,
+	}
+	return searchCriteria
 }

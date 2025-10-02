@@ -1,0 +1,51 @@
+[
+  {
+    "uuid": "76153836730880",
+    "displayName": "vol-030ba747139817215",
+    "className": "VirtualVolume",
+    "environmentType": "CLOUD",
+    "discoveredBy": {
+      "uuid": "76150987510096",
+      "displayName": "aws-test",
+      "category": "Public Cloud",
+      "isProbeRegistered": false,
+      "type": "AWS",
+      "readonly": false
+    },
+    "vendorIds": {
+      "aws-test": "vol-030ba747139817215"
+    },
+    "state": "ACTIVE",
+    "severity": "Minor",
+    "costPrice": 0.0008767123,
+    "severityBreakdown": {
+      "MINOR": 1
+    },
+    "providers": [
+      {
+        "uuid": "76150841313554",
+        "displayName": "GP3",
+        "className": "StorageTier"
+      }
+    ],
+    "consumers": [
+      {
+        "uuid": "76153836730864",
+        "displayName": "i-0fd101be596411e38",
+        "className": "VirtualMachine"
+      },
+      {
+        "uuid": "76152462813049",
+        "displayName": "TRB-123593",
+        "className": "VirtualMachineSpec"
+      }
+    ],
+    "template": {
+      "uuid": "76150841313554",
+      "displayName": "GP3",
+      "discovered": false,
+      "enableMatch": false
+    },
+    "staleness": "CURRENT"
+  }
+]
