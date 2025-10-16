@@ -46,7 +46,7 @@ func TestGetEntity(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/GetEntity.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
@@ -95,7 +95,7 @@ func TestTagEntity(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/TagEntity.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response

@@ -44,7 +44,7 @@ func TestSearchEntities(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchAllVms.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
@@ -98,7 +98,7 @@ func TestSearchEntityByName(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchEntityByName.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	tests := []struct {
@@ -198,7 +198,7 @@ func TestSearchEntityByVendorId(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchEntityByName.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	tests := []struct {
@@ -345,7 +345,7 @@ func TestSearchVolumeById(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/SearchVolumeById.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	tests := []struct {

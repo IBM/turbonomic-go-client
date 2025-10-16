@@ -39,17 +39,18 @@ type ActionsCriteria struct {
 
 // Results of GetActions Turbonomc API call
 type ActionResults []struct {
-	UUID           string  `json:"uuid"`
-	DisplayName    string  `json:"displayName"`
-	ActionImpactID int64   `json:"actionImpactID"`
-	MarketID       int     `json:"marketID"`
-	CreateTime     string  `json:"createTime"`
-	ActionType     string  `json:"actionType"`
-	ActionState    string  `json:"actionState"`
-	ActionMode     string  `json:"actionMode"`
-	Details        string  `json:"details"`
-	Importance     float32 `json:"importance"`
-	Target         struct {
+	UUID                   string  `json:"uuid"`
+	DisplayName            string  `json:"displayName"`
+	ActionImpactID         int64   `json:"actionImpactID"`
+	MarketID               int     `json:"marketID"`
+	CreateTime             string  `json:"createTime"`
+	ActionType             string  `json:"actionType"`
+	ActionState            string  `json:"actionState"`
+	ActionMode             string  `json:"actionMode"`
+	ActionStateDescription string  `json:"actionStateDescription"`
+	Details                string  `json:"details"`
+	Importance             float32 `json:"importance"`
+	Target                 struct {
 		UUID            string `json:"uuid"`
 		DisplayName     string `json:"displayName"`
 		ClassName       string `json:"className"`
@@ -157,6 +158,16 @@ type ActionResults []struct {
 		} `json:"discoveredBy"`
 		VendorIds map[string]string `json:"vendorIds"`
 	} `json:"newLocation"`
+	ActionSchedule struct {
+		UUID                               string `json:"uuid"`
+		DisplayName                        string `json:"displayName"`
+		NextOccurrence                     string `json:"nextOccurrence"`
+		NextOccurrenceTimestamp            int64  `json:"nextOccurrenceTimestamp"`
+		TimeZoneId                         string `json:"timeZoneId"`
+		Mode                               string `json:"mode"`
+		AcceptedByUserForMaintenanceWindow bool   `json:"acceptedByUserForMaintenanceWindow"`
+		RemaingTimeActiveInMs              int64  `json:"remaingTimeActiveInMs"`
+	}
 	CompoundActions []struct {
 		DisplayName string `json:"displayName"`
 		ActionType  string `json:"actionType"`

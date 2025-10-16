@@ -43,7 +43,7 @@ func TestClient_GetStats(t *testing.T) {
 	// Mock response from the Turbonomic API
 	mockResponse, err := os.ReadFile("./testfiles/GetStats.json")
 	if err != nil {
-		t.Fatal("Error when opening file: ", err)
+		t.Fatal("error when opening file: ", err)
 	}
 
 	// Create a test server with the mock response
