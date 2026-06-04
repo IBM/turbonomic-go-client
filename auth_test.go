@@ -108,7 +108,9 @@ func TestClientAuth_OAuth2POST(t *testing.T) {
 			if err != nil {
 				http.Error(w, "error reading body", http.StatusBadRequest)
 			}
-			defer r.Body.Close()
+			defer func() {
+				_ = r.Body.Close()
+			}()
 			bodyStr := string(body)
 
 			switch {

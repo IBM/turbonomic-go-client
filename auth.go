@@ -81,11 +81,17 @@ func clientAuth(authreq *AuthRequest, logConfig logging.LoggerConfig) (*Client, 
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			logConfig.Logger.Error(logConfig.Ctx, "failed to close response body", "error", closeErr)
+		}
+	}()
 
 	if resp.StatusCode == http.StatusUnauthorized {
 		logConfig.Logger.Debug(logConfig.Ctx, "authentication failed for client_secret_basic method, trying client_secret_post")
-		resp.Body.Close()
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			logConfig.Logger.Error(logConfig.Ctx, "failed to close response body", "error", closeErr)
+		}
 		req, err = buildOAuthPostRequest(authreq, urlPath)
 		if err != nil {
 			return nil, err
@@ -95,7 +101,11 @@ func clientAuth(authreq *AuthRequest, logConfig logging.LoggerConfig) (*Client, 
 			return nil, err
 		}
 		clientMethod = clientSecretPost
-		defer resp.Body.Close()
+		defer func() {
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				logConfig.Logger.Error(logConfig.Ctx, "failed to close response body", "error", closeErr)
+			}
+		}()
 	}
 
 	if resp.StatusCode >= http.StatusBadRequest {

@@ -225,7 +225,11 @@ func (c *Client) request(reqOpt RequestOptions) ([]byte, error) {
 		return nil, err
 	}
 	respBody, err := io.ReadAll(restResp.Body)
-	defer restResp.Body.Close()
+	defer func() {
+		if closeErr := restResp.Body.Close(); closeErr != nil {
+			c.Logger.Error(c.Ctx, "failed to close response body", "error", closeErr)
+		}
+	}()
 
 	if restResp.StatusCode >= 400 {
 		err = errors.New(string(respBody))
