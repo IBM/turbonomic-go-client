@@ -319,6 +319,18 @@ func (c *Client) getSearchCriteria(searchReq SearchRequest, filterType string) S
 			})
 		}
 	}
+	// SearchParameters carries additional filterType→value pairs added by the caller.
+	// Each non-empty value is appended as a case-insensitive EQ criterion.
+	for ft, val := range searchReq.SearchParameters {
+		if len(val) > 0 {
+			criteriaList = append(criteriaList, Criteria{
+				CaseSensitive: false,
+				ExpType:       "EQ",
+				ExpVal:        val,
+				FilterType:    ft,
+			})
+		}
+	}
 
 	searchCriteria := SearchDTO{
 		EnvironmentType: searchReq.EnvironmentType,
