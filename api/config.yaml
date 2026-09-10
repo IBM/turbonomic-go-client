@@ -1,0 +1,48 @@
+package: generated
+generate:
+  client: true
+  models: true
+  embedded-spec: false
+
+compatibility:
+  # Always prefix enum constant names with their type name (e.g. GroupByCriterionGroupType
+  # instead of GroupType) to avoid clashes with other generated types of the same name.
+  always-prefix-enum-values: true
+
+output: api/generated/client.gen.go
+output-options:
+  # Only generate code for the operations actually used by the v2 package and
+  # the terraform provider. Add new operation IDs here when new API surface is
+  # needed. skip-prune is false so that unreferenced model types are also dropped.
+  skip-prune: false
+  include-operation-ids:
+    # Groups
+    - getGroups
+    - searchGroups
+    - createGroup
+    - editGroup
+    - deleteGroup
+    - getGroupByUuid
+    - getMembersByGroupUuid
+    - getEntitiesByGroupUuid
+    - countGroups
+    - groupFields
+    # Targets
+    - getTargets
+    - getTarget
+    - addTarget
+    - editTarget
+    - deleteTarget
+    - executeOnTarget
+    - getEntitiesByTargetUuid
+    # Entities
+    - getEntities
+    - searchEntities
+    - getEntityByUuid
+  # Avoid clashes between generated client response wrapper types (e.g.
+  # UpdateClientResponse) and component schema types of the same name.
+  # See: https://github.com/oapi-codegen/oapi-codegen#duplicate-types-generated-for-clients-response-object-types
+  response-type-suffix: Resp
+
+# OpenAPI spec path - can be overridden with OPENAPI_SPEC environment variable
+# Default: ../api/com.vmturbo.api/target/swagger/openapi3/openapi3.yaml
